@@ -1,0 +1,22 @@
+En el actuador se implementa una máquina de estados dedicada al control de actuadores, en este caso LEDs, permitiendo
+ manejar el encendido, apagado, parpadeo y pulso de forma no bloqueante.
+
+En task_actuator_attribute.h se definen las estructuras, tipos y tablas que describen la lógica del actuador mediante los estados.
+ Para esto, tambien se enumeran los eventos, estados y un identificador para cada LED. Por otro lado se definen las siguientes estructuras:
+- task_actuator_cfg_t: con la configuración física y temporal (puerto GPIO, pin, valores ON/OFF, tiempos de blink y pulso).
+- task_actuator_dta_t: con los datos dinámicos del actuador (estado, evento, flag, tick).
+
+
+En task_actuator_interface.h se define la interfaz pública del módulo, donde se define la función: 
+put_event_task_actuator(task_actuator_ev_t event, task_actuator_id_t identifier),
+que permite a otros módulos enviar eventos a los actuadores, en este caso cada LED, sin conocer los detalles de su implementación. 
+
+En task_actuator.c se implementa la lógica principal de la maquina de estados. Contiene:
+- La configuración de actuadores y sus datos asociados.
+- Función task_actuator_init(): inicializa la FSM, configura el estado inicial (apagado) y resetea contadores.
+- Función task_actuator_update(): se ejecuta periódicamente, actualiza el tiempo y llama a la FSM cuando corresponde.
+- Función task_actuator_statechart(): contiene las transiciones entre estados, manejando los eventos recibidos y actualizando la salida física (GPIO). 
+
+En nuestro caso observamos que: 
+La variable g_app_runtime_us se inicializa en 0 us y finaliza en 23 us.
+El campo WCET inicializa en 0 ms para cada tarea y luego cambia para la tarea sensor a 12 us, para la sistema a 4 us y para la actuador a 7 us.
